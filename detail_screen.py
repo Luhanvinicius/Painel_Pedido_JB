@@ -13,7 +13,7 @@ class DetailApp:
         self.conn = conn
         self.pedido = pedido
         self.nfe = nfe
-        self.remessa = None
+        self.remessa = None  # Remessa será carregada a partir dos dados
 
         # Cores baseadas na paleta de cores
         bg_color = "#1F3A68"  # Fundo azul-escuro
@@ -143,7 +143,8 @@ class DetailApp:
                 self.values[label].insert(0, value)
                 self.values[label].config(state='readonly')
 
-        self.remessa = str(int(float(row[4]))) if row else None
+            # Aqui estamos capturando a remessa
+            self.remessa = str(int(float(row[4]))) if row else None
         cursor.close()
 
     def load_movements(self, scrollable_frame, pedido, nfe):
@@ -188,16 +189,53 @@ class DetailApp:
             open_historico_roteiros_window(self.root, self.conn, self.pedido, self.remessa)
 
     def handle_open_inconsistencias_window(self):
-        if not self.pedido or not self.nfe:
-            messagebox.showerror("Erro", "Pedido ou Nota não encontrados.")
+        if not self.remessa:
+            messagebox.showerror("Erro", "Remessa não encontrada.")
         else:
-            open_inconsistencias_window(self.root, self.conn, self.pedido, self.nfe)
+            open_inconsistencias_window(self.root, self.conn, self.pedido, self.nfe, self.remessa)
 
     def handle_open_dynamics_window(self):
         if not self.pedido or not self.nfe:
             messagebox.showerror("Erro", "Pedido ou Nota não encontrados.")
         else:
             open_dynamics_window(self.root, self.conn, self.pedido, self.nfe)
+
+# Função atualizada para a tela de inconsistências, agora com remessa
+def open_inconsistencias_window(root, conn, pedido, nfe, remessa):
+    inconsistencias_window = tk.Toplevel(root)
+    inconsistencias_window.title(f"Inconsistências - Pedido: {pedido}, Nota: {nfe}, Remessa: {remessa}")
+    inconsistencias_window.geometry("400x600")
+
+    frame = tk.Frame(inconsistencias_window)
+    frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+    # Label para título
+    tk.Label(frame, text="Notificação de Inconsistências", font=("Arial", 16, "bold")).pack(pady=(0, 10))
+
+    # Realizar a consulta no banco de dados para buscar a notificação e outras informações
+    cursor = conn.cursor()
+    query = """
+    SELECT data_envio, notificacao, retorno_ocorrencia, problema, situacao, acao, apontamento
+    FROM base_controle
+    WHERE remessa = %s;
+    """
+    cursor.execute(query, (remessa,))
+    result = cursor.fetchone()
+
+    if result:
+        data_envio, notificacao, retorno_ocorrencia, problema, situacao, acao, apontamento = result
+
+        tk.Label(frame, text=f"DATA NOTIFICAÇÃO: {data_envio}", font=("Arial", 12), wraplength=350).pack(pady=10)
+        tk.Label(frame, text=f"TIPO NOTIFICAÇÃO: {notificacao}", font=("Arial", 12), wraplength=350).pack(pady=10)
+        tk.Label(frame, text=f"DATA RESPOSTA: {retorno_ocorrencia}", font=("Arial", 12), wraplength=350).pack(pady=10)
+        tk.Label(frame, text=f"PROBLEMA: {problema}", font=("Arial", 12), wraplength=350).pack(pady=10)
+        tk.Label(frame, text=f"SITUAÇÃO: {situacao}", font=("Arial", 12), wraplength=350).pack(pady=10)
+        tk.Label(frame, text=f"AÇÃO: {acao}", font=("Arial", 12), wraplength=350).pack(pady=10)
+        tk.Label(frame, text=f"APONTAMENTO: {apontamento}", font=("Arial", 12), wraplength=350).pack(pady=10)
+    else:
+        tk.Label(frame, text="Nenhuma inconsistência encontrada.", font=("Arial", 12), wraplength=350).pack(pady=10)
+
+    cursor.close()
 
 if __name__ == "__main__":
     root = tk.Tk()

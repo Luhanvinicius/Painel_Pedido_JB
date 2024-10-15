@@ -1,10 +1,10 @@
 import tkinter as tk
 from tkinter import messagebox
 
-def open_inconsistencias_window(root, conn, pedido, nfe):
+def open_inconsistencias_window(root, conn, pedido, nfe, remessa):
     # Criação da nova janela
     inconsistencias_window = tk.Toplevel(root)
-    inconsistencias_window.title(f"Inconsistências - Pedido: {pedido}, Nota: {nfe}")
+    inconsistencias_window.title(f"Inconsistências - Pedido: {pedido}, Nota: {nfe}, Remessa: {remessa}")
     inconsistencias_window.geometry("400x600")
 
     # Frame para exibir os resultados
@@ -19,9 +19,9 @@ def open_inconsistencias_window(root, conn, pedido, nfe):
     query = """
     SELECT data_envio, notificacao, retorno_ocorrencia, problema, situacao, acao, apontamento
     FROM base_controle
-    WHERE pedido = %s AND "nf" = %s;
+    WHERE remessa = %s;
     """
-    cursor.execute(query, (pedido, nfe))
+    cursor.execute(query, (remessa,))
     result = cursor.fetchone()
 
     if result:
