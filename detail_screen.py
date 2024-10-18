@@ -5,6 +5,7 @@ from inventory_window import open_inventory_window
 from historico_roteiros import open_historico_roteiros_window
 from inconsistencias_window import open_inconsistencias_window
 from dynamics_window import open_dynamics_window
+from controle_retencao_window import open_controle_retencao_window  # Importa o script para abrir a janela de controle de retenção
 from tkinter import ttk
 
 class DetailApp:
@@ -85,6 +86,7 @@ class DetailApp:
         button_frame.grid_columnconfigure(2, weight=1)
         button_frame.grid_columnconfigure(3, weight=1)
         button_frame.grid_columnconfigure(4, weight=1)
+        button_frame.grid_columnconfigure(5, weight=1)  # Adiciona mais uma coluna para o novo botão
 
         # Função para alterar a cor ao passar o mouse nos botões
         def on_enter(e, btn):
@@ -99,6 +101,7 @@ class DetailApp:
         self.create_button(button_frame, "HISTÓRICO DE ROTEIROS", self.handle_open_historico_roteiros_window, 2, btn_color, on_enter, on_leave)
         self.create_button(button_frame, "INCONSISTÊNCIAS", self.handle_open_inconsistencias_window, 3, btn_color, on_enter, on_leave)
         self.create_button(button_frame, "DYNAMICS", self.handle_open_dynamics_window, 4, btn_color, on_enter, on_leave)
+        self.create_button(button_frame, "CONTROLE RETENÇÃO", self.handle_open_controle_retencao_window, 5, btn_color, on_enter, on_leave)  # Novo botão
 
     def create_button(self, parent, text, command, col, btn_color, on_enter, on_leave):
         """Função para criar um botão estilizado"""
@@ -200,47 +203,8 @@ class DetailApp:
         else:
             open_dynamics_window(self.root, self.conn, self.pedido, self.nfe)
 
-# Função atualizada para a tela de inconsistências, agora com remessa
-def open_inconsistencias_window(root, conn, pedido, nfe, remessa):
-    inconsistencias_window = tk.Toplevel(root)
-    inconsistencias_window.title(f"Inconsistências - Pedido: {pedido}, Nota: {nfe}, Remessa: {remessa}")
-    inconsistencias_window.geometry("400x600")
-
-    frame = tk.Frame(inconsistencias_window)
-    frame.pack(fill="both", expand=True, padx=10, pady=10)
-
-    # Label para título
-    tk.Label(frame, text="Notificação de Inconsistências", font=("Arial", 16, "bold")).pack(pady=(0, 10))
-
-    # Realizar a consulta no banco de dados para buscar a notificação e outras informações
-    cursor = conn.cursor()
-    query = """
-    SELECT data_envio, notificacao, retorno_ocorrencia, problema, situacao, acao, apontamento
-    FROM base_controle
-    WHERE remessa = %s;
-    """
-    cursor.execute(query, (remessa,))
-    result = cursor.fetchone()
-
-    if result:
-        data_envio, notificacao, retorno_ocorrencia, problema, situacao, acao, apontamento = result
-
-        tk.Label(frame, text=f"DATA NOTIFICAÇÃO: {data_envio}", font=("Arial", 12), wraplength=350).pack(pady=10)
-        tk.Label(frame, text=f"TIPO NOTIFICAÇÃO: {notificacao}", font=("Arial", 12), wraplength=350).pack(pady=10)
-        tk.Label(frame, text=f"DATA RESPOSTA: {retorno_ocorrencia}", font=("Arial", 12), wraplength=350).pack(pady=10)
-        tk.Label(frame, text=f"PROBLEMA: {problema}", font=("Arial", 12), wraplength=350).pack(pady=10)
-        tk.Label(frame, text=f"SITUAÇÃO: {situacao}", font=("Arial", 12), wraplength=350).pack(pady=10)
-        tk.Label(frame, text=f"AÇÃO: {acao}", font=("Arial", 12), wraplength=350).pack(pady=10)
-        tk.Label(frame, text=f"APONTAMENTO: {apontamento}", font=("Arial", 12), wraplength=350).pack(pady=10)
-    else:
-        tk.Label(frame, text="Nenhuma inconsistência encontrada.", font=("Arial", 12), wraplength=350).pack(pady=10)
-
-    cursor.close()
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    conn = None  # Aqui você conecta ao seu banco de dados real.
-    pedido = "123456"
-    nfe = "654321"
-    app = DetailApp(root, conn, pedido, nfe)
-    root.mainloop()
+    def handle_open_controle_retencao_window(self):
+        if not self.pedido or not self.nfe:
+            messagebox.showerror("Erro", "Pedido ou Nota não encontrados.")
+        else:
+            open_controle_retencao_window(self.root, self.conn, self.pedido, self.nfe)  # Chama a função do script controle_retencao_windows
